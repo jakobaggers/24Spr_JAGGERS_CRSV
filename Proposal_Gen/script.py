@@ -1,4 +1,8 @@
+#%%
 import os
+#%%
+# pound percent percent is how you run a cell and that is what makes the interactive session pop up
+
 from datetime import datetime
 import json
 import shutil
@@ -9,7 +13,7 @@ import mistune
 input_file_path = 'input.json'
 Year = "2024"
 Semester = "Spring"
-Version = "998"
+Version = "001"
 
 class MyRenderer(mistune.Renderer):
     def list_item(self, text):
@@ -87,7 +91,7 @@ if __name__ == "__main__":
     # input_file_path = 'input.json'
     # Year = "2024"
     # Semester = "Spring"
-    # Version = "999"
+    # Version = "001"
 
     output_file_path = os.getcwd() + f'{os.sep}Proposals{os.sep}{Year}{semester2code[Semester.lower()]}{os.sep}{Version}{os.sep}'
     with open(output_file_path+ input_file_path, 'r') as input_file:
@@ -101,3 +105,5 @@ if __name__ == "__main__":
     except:
         print('No Figure is needed.')
     print(f"proposal_{json_data['instructor']}.md generated successfully.")
+
+# %%

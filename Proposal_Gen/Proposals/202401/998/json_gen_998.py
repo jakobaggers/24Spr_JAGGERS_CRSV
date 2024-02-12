@@ -10,13 +10,13 @@ def save_to_json(data, output_file_path):
         json.dump(data, output_file, indent=2)
 
 semester2code = { "sp":"01", "spr":"01", "spring":"01", "su":"02", "sum":"02", "summer":"02", "fa":"03", "fall":"03"}
-thisfilename = os.path.basename(__file__) # should match _ver for version, ideally 3-digit string starting as "000", up to "999"
+thisfilename = os.path.basename(__file__)
 
 data_to_save = \
     {
         # -----------------------------------------------------------------------------------------------------------------------
         "Version":
-            """001""",
+            """998""",
         # -----------------------------------------------------------------------------------------------------------------------
         "Year":
             """2024""",
@@ -25,69 +25,71 @@ data_to_save = \
             """Spring""",
         # -----------------------------------------------------------------------------------------------------------------------
         "project_name":
-            """Mapping the Causes and Effects of Drone Strikes between Actors""",
+            """Neural Network Design Streamlit App """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Objective":
             """ 
-            The goal of this project is to create visualizations and journalistic insights on the use of drone strikes across the world 
-            in the last two decades. I plan on creating a set of visualizations that include an interactive website through which one 
-            can see the location of each drone strike (through geospacial data) and a set of visualizations that denote the actors
-            involved, civilian casualties, effectiveness of the strikes, and visualizations of the duration of conflicts by region.
-            This project can be expanded to any other type of conflict including riots, war, etc.
+            The goal of this project is to convert all the Neural Network Design Demos from Pyqt to streamlit App. 
+            Currently all the demos are in pyqt environment and can be installed by pip (https://pypi.org/project/nndesigndemos/).
+            In the project, you job is is converting All the current demos which is written in python and uses pyqt widgets to 
+            Streamlit webapp. And then create a container that can be deployed in the web domain. The final product is using the 
+            demos by providing a user a link that opens up a webpage and all the demos will be accessed through internet.
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Dataset":
             """
-            I plan on using the ACLED dataset. I have been granted special access by the organization to download large amounts of 
-            data, and I have created a dataset of 148,316 observations of drone strikes/aerial strikes since 1997. 
-            The data can be accessed at https://acleddata.com/
+            No Dataset is needed for this project .  
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Rationale":
             """
-            This project will give more insight about the causes and effects of drone strikes in recent history. It will follow the
-            taste of an investigative data journalism project through which stories about trends can be told. 
+            This project is going to help students to use the Neural Network book demos in web format and it would easier for students 
+            to access them. This is project is educational case that helps Neural Network Community to understand Neural Network
+            in more conceptual way.
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Approach":
             """
             I plan on approaching this capstone through several steps.  
 
-            1. Exploratory Analysis
-            2. Shiny R website  
-            3. Create Individual Visualizations
-            4. Conduct Text Analysis on the descriptions of the conflicts  
+            1. Familiarize yourself with Streamlit environment.
+            2. Design the web layout with 2 books and all the chapters.  
+            3. Create a modular widgets can be used across all the chapters (Reusable).
+            4. Create a documentation from the begging till the end of the product.
+            5. After all demos is done, testing it in local machine.
+            6. Create the container that can be used in deployment.
+            7. Deploy it on a server that can be accessed over the internet. 
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Timeline":
             """
             This a rough time line for this project:  
 
-            - (1 Weeks) Exploratory analysis.  
-            - (3 Weeks) Shiny R and Website  
-            - (3 Weeks) Individual Visualizations  
-            - (2 Weeks) Text Analysis  
-            - (1 Weeks) Write Investigative Journalism Story with Findings and Visualizations
-            - (1 Weeks) Final Paper
-            - (1 Weeks) Poster board
-            - (1 Weeks) Final Presentation  
+            - (1 Weeks) Streamlit environment.  
+            - (2 Weeks) Web layout  
+            - (1 Weeks) Modular widgets  
+            - (4 Weeks) Convert all the demos 
+            - (2 Weeks) Container  
+            - (2 Weeks) Web Deployment
+            - (2 Weeks) Documentation
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Expected Number Students":
             """
-            For this project maximum of 1 student can work on it.  
+            For this project maximum 2 students can work on it.  
             """,
         # -----------------------------------------------------------------------------------------------------------------------
         "Possible Issues":
             """
-            The challenge for me will be the text analysis, since that is something I have never done before.
+            The challenge is on creating modular widgets and create a same layout as the book. Also, web deployment and
+            containerizing it is also another challenge. 
             """,
         # -----------------------------------------------------------------------------------------------------------------------
-        "Proposed by": "Jakob Aggers",
-        "Proposed by email": "jakobaggers@gwu.edu",
-        "instructor": "Edwin Lo",
-        "instructor_email": "edwinlo@gwu.edu",
-        "github_repo": "https://github.com/jakobaggers/24Spr_JAGGERS_projectName.git",
+        "Proposed by": "Dr. Amir Jafari",
+        "Proposed by email": "ajafari@gwu.edu",
+        "instructor": "Amir Jafari",
+        "instructor_email": "ajafari@gmail.com",
+        "github_repo": "https://github.com/amir-jafari/Capstone",
         # -----------------------------------------------------------------------------------------------------------------------
     }
 os.makedirs(

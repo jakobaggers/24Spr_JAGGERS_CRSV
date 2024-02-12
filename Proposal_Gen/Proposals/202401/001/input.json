@@ -1,0 +1,18 @@
+{
+  "Version": "001",
+  "Year": "2024",
+  "Semester": "Spring",
+  "project_name": "Mapping the Causes and Effects of Drone Strikes between Actors",
+  "Objective": " \n            The goal of this project is to create visualizations and journalistic insights on the use of drone strikes across the world \n            in the last two decades. I plan on creating a set of visualizations that include an interactive website through which one \n            can see the location of each drone strike (through geospacial data) and a set of visualizations that denote the actors\n            involved, civilian casualties, effectiveness of the strikes, and visualizations of the duration of conflicts by region.\n            This project can be expanded to any other type of conflict including riots, war, etc.\n            ",
+  "Dataset": "\n            I plan on using the ACLED dataset. I have been granted special access by the organization to download large amounts of \n            data, and I have created a dataset of 148,316 observations of drone strikes/aerial strikes since 1997. \n            The data can be accessed at https://acleddata.com/\n            ",
+  "Rationale": "\n            This project will give more insight about the causes and effects of drone strikes in recent history. It will follow the\n            taste of an investigative data journalism project through which stories about trends can be told. \n            ",
+  "Approach": "\n            I plan on approaching this capstone through several steps.  \n\n            1. Exploratory Analysis\n            2. Shiny R website  \n            3. Create Individual Visualizations\n            4. Conduct Text Analysis on the descriptions of the conflicts  \n            ",
+  "Timeline": "\n            This a rough time line for this project:  \n\n            - (1 Weeks) Exploratory analysis.  \n            - (3 Weeks) Shiny R and Website  \n            - (3 Weeks) Individual Visualizations  \n            - (2 Weeks) Text Analysis  \n            - (1 Weeks) Write Investigative Journalism Story with Findings and Visualizations\n            - (1 Weeks) Final Paper\n            - (1 Weeks) Poster board\n            - (1 Weeks) Final Presentation  \n            ",
+  "Expected Number Students": "\n            For this project maximum of 1 student can work on it.  \n            ",
+  "Possible Issues": "\n            The challenge for me will be the text analysis, since that is something I have never done before.\n            ",
+  "Proposed by": "Jakob Aggers",
+  "Proposed by email": "jakobaggers@gwu.edu",
+  "instructor": "Edwin Lo",
+  "instructor_email": "edwinlo@gwu.edu",
+  "github_repo": "https://github.com/jakobaggers/24Spr_JAGGERS_projectName.git"
+}
