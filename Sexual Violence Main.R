@@ -11,18 +11,18 @@ library(tidyverse)
 # acled1 <- read_csv("acled 1900-01-01-2004-01-01.csv", name_repair = "universal")
 
 # acled1 <- 
-  acled1 %>% 
+acled1 %>% 
   filter(event_date != "01 January 2004")
 
 
 # acled <-
-   rbind(acled2, acled1)
+rbind(acled2, acled1)
 
 # ACLED files too large to commit to GITHUB. If needed, can use them
 
 
-   ###################### New Datasets ######################
-   ##########################################################
+###################### New Datasets ######################
+##########################################################
 
 library(readxl)
 
@@ -39,8 +39,8 @@ CNTSDATA <- read_excel("CNTSDATA.xlsx")
 # Part 0: Exploratory Analysis
 
 # Part 1: acled_sexual_violence: make a shiny R based on actor type (interaction) 
-    # one shiny map for state sexual violence
-    # another shiny map for individual cases
+# one shiny map for state sexual violence
+# another shiny map for individual cases
 
 # Part 2: Create model for type of actor (region + ally (ucdp_actor), economic state of country (CNTSDATA)) or interaction (reason for conflict (ucdp_issues)) that incurs sexual violence
 
@@ -49,12 +49,3 @@ CNTSDATA <- read_excel("CNTSDATA.xlsx")
 # Part 4: Based on Part 2, write data journalism story that incorporate results from model, and uses visualizations from Part 3
 
 # Poster, Final Paper
-
-
-
-#######################                          #######################
-#######################          Part 0:         #######################
-#######################   Exploratory Analysis   #######################
-#######################                          #######################
-
-
