@@ -1,6 +1,10 @@
 library(readxl)
+library(tidyverse)
 
-acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
+#set up CRAN Mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+acled_sexual_violence <- read_csv("Data/acled_sexual_violence.csv", name_repair = "universal")
 
 
 #######################                          #######################
@@ -38,11 +42,10 @@ acled_sexual_violence <-
   filter(Actor_Type != "Civilians")
 
 #make the Shiny
-install.packages("shiny")
+#install.packages("shiny")
 library(shiny)
 library(leaflet)
 
-library(shiny)
 
 ui <- fluidPage(
   titlePanel("World Map of Sexual Violence in War"),
@@ -73,6 +76,7 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
 
 
 
