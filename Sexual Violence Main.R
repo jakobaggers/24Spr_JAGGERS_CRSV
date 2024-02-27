@@ -26,13 +26,13 @@ rbind(acled2, acled1)
 
 library(readxl)
 
-SVAC <- read_excel("SVAC_3.2_conflictyears.xlsx")
+SVAC <- read_excel("Data/SVAC_3.2_conflictyears.xlsx")
 
 acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
 
 ucdp_actor <- read_excel("ucdp_actor.xlsx")
 
-ucdp_issues <- read_excel("ucdp_issues.xlsx")
+ucdp_issues <- read_excel("Data/ucdp_issues.xlsx")
 
 CNTSDATA <- read_excel("CNTSDATA.xlsx")
 

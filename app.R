@@ -79,5 +79,11 @@ shinyApp(ui, server)
 
 #https://ufy5du-jakobaggers.shinyapps.io/24Spr_JAGGERS_projectName/
 
+# Things to add 26FEB 
+    # search by country
+    # search for an actor (like keyword: Islamic State (North Africa) contained in ISIS)
+    # add ability to search for "all" in type of actor
+    # add definitions of each type of actor
+
 
 
