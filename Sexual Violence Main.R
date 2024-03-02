@@ -49,3 +49,9 @@ CNTSDATA <- read_excel("CNTSDATA.xlsx")
 # Part 4: Based on Part 2, write data journalism story that incorporate results from model, and uses visualizations from Part 3
 
 # Poster, Final Paper
+
+
+#### 
+sum <- SVAC %>% 
+  group_by(state_prev, ai_prev, hrw_prev) %>% 
+  summarize(n = n())
