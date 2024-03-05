@@ -4,7 +4,7 @@ library(tidyverse)
 #set up CRAN Mirror
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-acled_sexual_violence <- read_csv("Data/acled_sexual_violence.csv", name_repair = "universal")
+acled_sexual_violence <- read_csv("App/acled_sexual_violence.csv", name_repair = "universal")
 
 
 #######################                          #######################
@@ -150,6 +150,7 @@ server <- function(input, output, session) {
       filtered <- filtered %>%
         filter(str_detect(notes, search_term) |
                  str_detect(actor1, search_term) |
+                 str_detect(source, search_term) |
                  str_detect(assoc_actor_1, search_term)
         )
     }
@@ -179,5 +180,6 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 
 
-
+#### 04MAR edit the search bar so that source is included in the whole string (Palestine does not show up bc 
+# there are multiple words in this source)
 
