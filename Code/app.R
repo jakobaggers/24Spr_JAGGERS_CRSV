@@ -4,7 +4,7 @@ library(tidyverse)
 #set up CRAN Mirror
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-acled_sexual_violence <- read_csv("App/acled_sexual_violence.csv", name_repair = "universal")
+acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
 
 
 #######################                          #######################
