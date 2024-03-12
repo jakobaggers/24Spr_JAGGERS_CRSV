@@ -28,13 +28,13 @@ library(readxl)
 
 SVAC <- read_excel("Data/SVAC_3.2_conflictyears.xlsx")
 
-acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
+#acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
 
-ucdp_actor <- read_excel("ucdp_actor.xlsx")
+ucdp_actor <- read_excel("Data/ucdp_actor.xlsx")
 
 ucdp_issues <- read_excel("Data/ucdp_issues.xlsx")
 
-CNTSDATA <- read_excel("CNTSDATA.xlsx")
+CNTSDATA <- read_excel("Data/CNTSDATA.xlsx")
 
 # Part 0: Exploratory Analysis
 
@@ -52,6 +52,129 @@ CNTSDATA <- read_excel("CNTSDATA.xlsx")
 
 
 #### 
-sum <- SVAC %>% 
+SVAC %>% 
   group_by(state_prev, ai_prev, hrw_prev) %>% 
   summarize(n = n())
+
+SVAC_prev <- SVAC[SVAC$state_prev == 1 | SVAC$ai_prev == 1 | SVAC$hrw_prev == 1, ]
+
+SVAC_prev %>% 
+  group_by(actor_type) %>% 
+  summarize(n = n())
+
+SVAC_prev %>% 
+  group_by(type_of_conflict) %>% 
+  summarize(n = n())
+
+SVAC %>% 
+  group_by(type_of_conflict) %>% 
+  summarize(n = n())
+
+SVAC_prev %>% 
+  group_by(incompatibility) %>% 
+  summarize(n = n())
+
+SVAC_prev %>% 
+  group_by(region) %>% 
+  summarize(n = n())
+
+SVAC_prev %>% 
+  group_by(child_prev) %>% 
+  summarize(n = n()) 
+
+###### Let's fix the form variable
+library(dplyr)
+
+# Define the categories
+
+# Create new columns for each category with initial value 0
+SVAC_prev <- SVAC_prev %>%
+  mutate(
+    form_rape = ifelse(grepl("1", form), 1, 0),
+    form_sexual_slavery = ifelse(grepl("2", form), 1, 0),
+    form_forced_prostitution = ifelse(grepl("3", form), 1, 0),
+    form_forced_pregnancy = ifelse(grepl("4", form), 1, 0),
+    form_forced_sterilization_abortion = ifelse(grepl("5", form), 1, 0),
+    form_sexual_mutilation = ifelse(grepl("6", form), 1, 0),
+    form_sexual_torture = ifelse(grepl("7", form), 1, 0)
+  )
+
+
+# Calculate Cramer's V for each pair of categorical variables
+install.packages("vcd")
+library(vcd)
+install.packages("corrplot")
+library(corrplot)
+install.packages("Hmisc")
+library(Hmisc)
+
+SVAC_prev_NA <- SVAC_prev %>% 
+  select(!c("gwnoloc2", "child_prev", "form"))
+
+SVAC_prev_NA <- na.omit(SVAC_prev_NA)
+
+# Convert specified variables to factors
+SVAC_prev_NA$state_prev <- factor(ifelse(SVAC_prev_NA$state_prev == -99, NA, SVAC_prev_NA$state_prev))
+SVAC_prev_NA$ai_prev <- factor(ifelse(SVAC_prev_NA$ai_prev == -99, NA, SVAC_prev_NA$ai_prev))
+SVAC_prev_NA$hrw_prev <- factor(ifelse(SVAC_prev_NA$hrw_prev == -99, NA, SVAC_prev_NA$hrw_prev))
+
+library(forcats)
+
+# Convert each specified column to a factor individually
+SVAC_prev_NA <- SVAC_prev_NA %>%
+  mutate(
+    actor = as_factor(actor),
+    actorid = as_factor(actorid),
+    actor_type = as_factor(actor_type),
+    type_of_conflict = as_factor(type_of_conflict),
+    incompatibility = as_factor(incompatibility),
+    region = as_factor(region),
+    gwno_loc = as_factor(gwno_loc),
+    conflictyear = as_factor(conflictyear),
+    interm = as_factor(interm),
+    postc = as_factor(postc),
+    state_prev = as_factor(state_prev),
+    ai_prev = as_factor(ai_prev),
+    hrw_prev = as_factor(hrw_prev),
+    form_rape = as_factor(form_rape),
+    form_sexual_slavery = as_factor(form_sexual_slavery),
+    form_forced_prostitution = as_factor(form_forced_prostitution),
+    form_forced_pregnancy = as_factor(form_forced_pregnancy),
+    form_forced_sterilization_abortion = as_factor(form_forced_sterilization_abortion),
+    form_sexual_mutilation = as_factor(form_sexual_mutilation),
+    form_sexual_torture = as_factor(form_sexual_torture)
+  )
+
+# Check the structure of your dataframe to ensure the conversion
+str(SVAC_prev_NA)
+SVAC_prev_NA <- na.omit(SVAC_prev_NA)
+
+SVAC_prev_NA_factor <- SVAC_prev_NA_factor[complete.cases(SVAC_prev_NA_factor), ]
+
+# Now Cramer's V using these variables.
+
+SVAC_prev_NA_numeric <- as.data.frame(sapply(SVAC_prev_NA_factor, as.numeric))
+
+# Calculate the correlation matrix
+correlation_matrix <- cor(SVAC_prev_NA_numeric, use = "pairwise.complete.obs")
+
+# Print the correlation matrix
+print(correlation_matrix)
+
+correlation_matrix[is.na(correlation_matrix)] <- 0
+
+corrplot(correlation_matrix, 
+         method = "color",          # Color method
+         type = "upper",            # Upper triangle
+         order = "hclust",         # Hierarchical clustering
+         tl.col = "black",          # Label color
+         tl.srt = 45,               # Label rotation
+         addCoef.col = "black",     # Coefficient color
+         number.cex = 0.5,          # Coefficient size
+         tl.cex = 0.5               # Label size
+         )
+
+plot.new()
+
+png("Images/SVAC_corr_plot.png", width = 800, height = 600)
+dev.off()  # Close the PNG device
