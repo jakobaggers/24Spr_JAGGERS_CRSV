@@ -178,3 +178,77 @@ plot.new()
 
 png("Images/SVAC_corr_plot.png", width = 800, height = 600)
 dev.off()  # Close the PNG device
+
+
+
+########################### SVAC correlations pt 2 ###############################
+
+SVAC <- SVAC %>%
+  mutate(overall_prev = pmax(state_prev, hrw_prev, ai_prev))
+
+SVAC$overall_prev <- as.character(SVAC$overall_prev)
+
+library(forcats)
+
+SVAC$overall_prev <- as_factor(SVAC$overall_prev)
+
+SVAC <- SVAC %>%
+  mutate_all(~replace(., . == -99 | is.na(.), 0))
+
+SVAC <- SVAC %>%
+  mutate(
+    form_rape = ifelse(grepl("1", form), 1, 0),
+    form_sexual_slavery = ifelse(grepl("2", form), 1, 0),
+    form_forced_prostitution = ifelse(grepl("3", form), 1, 0),
+    form_forced_pregnancy = ifelse(grepl("4", form), 1, 0),
+    form_forced_sterilization_abortion = ifelse(grepl("5", form), 1, 0),
+    form_sexual_mutilation = ifelse(grepl("6", form), 1, 0),
+    form_sexual_torture = ifelse(grepl("7", form), 1, 0)
+  )
+
+SVAC <- SVAC %>% 
+  select(!form)
+
+SVAC_model <- SVAC %>% 
+  select(actor_type, type_of_conflict, incompatibility, region, conflictyear, interm, postc, overall_prev, actorid)
+
+library(stats)
+
+# Fit logistic regression model
+model <- glm(overall_prev ~ actor_type + type_of_conflict + incompatibility + region + conflictyear + interm + postc + actorid,
+             data = SVAC_model,
+             family = binomial)
+
+# Summarize the model
+summary(model)
+
+# Extract coefficients, standard errors, z-values, and p-values from summary object
+coef_summary <- summary(model)$coefficients
+
+# Extract p-values
+p_values <- coef_summary[, "Pr(>|z|)"]
+
+# Determine significance
+Significance <- ifelse(p_values < 0.05, "Yes", "No")
+
+# Create a dataframe with coefficients, standard errors, z-values, p-values, and significance
+coef_summary <- data.frame(
+  Coefficient = coef_summary[, "Estimate"],
+  `Std. Error` = coef_summary[, "Std. Error"],
+  `Z Value` = coef_summary[, "z value"],
+  `P Value` = p_values,
+  Significance = Significance
+)
+
+# Print the table
+print(coef_summary)
+
+library(grid)
+library(gridExtra)
+
+# Convert the dataframe to a table grob
+table_grob <- tableGrob(coef_summary)
+
+# Save the table as an image using ggsave
+ggsave("Images/coef_summary_table.png", plot = table_grob, width = 8, height = 6, units = "in", dpi = 300)
+
