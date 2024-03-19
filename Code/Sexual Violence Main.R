@@ -256,7 +256,7 @@ SVAC %>%
   group_by(overall_prev) %>% 
   summarize (n = n())
 
-#### try logistic model again ########
+################################### try logistic model again ##################################
 
 SVAC <- SVAC %>% 
   mutate(actor_type = as_factor(actor_type),
@@ -320,7 +320,7 @@ predict(SVAC_logit, newdata = newdata1, type = "response")
 
 xkabledply( confint(SVAC_logit), title = "CIs using profiled log-likelihood" )
 
-####################confusion matrix 
+#################### confusion matrix 
 actual <- SVAC_model$overall_prev  # Actual classes
 predicted <- predict(SVAC_logit, type = "response")  # Predicted classes
 
@@ -341,8 +341,45 @@ sink("Images/confusion_matrix_output.txt")
 print(conf_matrix)
 sink()
 
-SVAC %>% 
-group_by(overall_prev) %>% 
-summarize(n = n())
+############################### R^2 value
+loadPkg("pscl") # use pR2( ) function to calculate McFadden statistics for model eval
+pr2 = pR2(SVAC_logit)
+pr2
 
-# counld try decision tree or random forrest
+############ Receiver-Operator-Characteristic (ROC) curve and Area-Under-Curve (AUC)
+loadPkg("pROC") # receiver operating characteristic curve, gives the diagnostic ability of a binary classifier system as its discrimination threshold is varied. The curve is on sensitivity/recall/true-positive-rate vs false_alarm/false-positive-rate/fall-out.
+prob=predict(SVAC_logit, type = "response" )
+SVAC_model$prob=prob
+h <- multiclass.roc(overall_prev~prob, data=SVAC_model)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+
+
+plot.roc(h$rocs[[1]], 
+         print.auc=T,
+         legacy.axes = T)
+plot.roc(h$rocs[[2]],
+         add=T, col = 'red',
+         print.auc = T,
+         legacy.axes = T,
+         print.auc.adj = c(0,3))
+plot.roc(h$rocs[[3]],add=T, col = 'blue',
+         print.auc=T,
+         legacy.axes = T,
+         print.auc.adj = c(0,5))
+plot.roc(h$rocs[[4]],add=T, col = 'green',
+         print.auc=T,
+         legacy.axes = T,
+         print.auc.adj = c(0,7))
+plot.roc(h$rocs[[5]],add=T, col = 'purple',
+         print.auc=T,
+         legacy.axes = T,
+         print.auc.adj = c(0,9))
+plot.roc(h$rocs[[6]],add=T, col = 'lightblue',
+         print.auc=T,
+         legacy.axes = T,
+         print.auc.adj = c(0,11))
+
+
+
+# will try decision tree and random forrest
