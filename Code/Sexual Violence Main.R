@@ -252,3 +252,97 @@ table_grob <- tableGrob(coef_summary)
 # Save the table as an image using ggsave
 ggsave("Images/coef_summary_table.png", plot = table_grob, width = 8, height = 6, units = "in", dpi = 300)
 
+SVAC %>% 
+  group_by(overall_prev) %>% 
+  summarize (n = n())
+
+#### try logistic model again ########
+
+SVAC <- SVAC %>% 
+  mutate(actor_type = as_factor(actor_type),
+         type_of_conflict = as_factor(type_of_conflict),
+         incompatibility = as_factor(incompatibility),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         interm = as_factor(interm),
+         postc = as_factor(postc),
+         overall_prev = as_factor(overall_prev),
+         actorid = as_factor(actorid))
+
+summary(SVAC_model)
+
+# Recode "0" in the "region" variable to NA (missing value)
+SVAC_model$region[SVAC_model$region == 0] <- NA
+
+# Recode "-99" in the "overall_prev" variable to NA (missing value)
+SVAC_model$overall_prev[SVAC_model$overall_prev == -99] <- NA
+
+
+SVAC_logit <- glm(overall_prev ~ actor_type + type_of_conflict + incompatibility  + region + postc + actorid,
+             data = SVAC_model,
+             family = "binomial")
+
+summary(SVAC_logit)
+
+install.packages("remotes")
+
+library(remotes)
+remotes::install_github("physicsland/ezids")
+library(ezids)
+
+xkabledply(SVAC_logit # title = paste("Logistic Regression :", format(formula(SVAC_logit)) ) )
+)
+
+# Growth Decay Factors
+expcoeff = exp(coef(SVAC_logit))
+# expcoeff
+xkabledply( as.table(expcoeff), title = "Exponential of coefficients in Logit Reg" , wide=T)
+
+#p fitted
+p_fitted = SVAC_logit$fitted.values[1] 
+
+predict(SVAC_logit)
+
+newdata1 <- data.frame(
+  actor_type = as.factor(1),               
+  type_of_conflict = as.factor(3),         
+  incompatibility = as.factor(1),          
+  region = as.factor(2),                   
+  conflictyear = as.factor(1),             
+  interm = as.factor(0),                   
+  postc = as.factor(0),                    
+  actorid = as.factor("114")               
+)
+
+predict(SVAC_logit, newdata = newdata1, type = "response")
+
+xkabledply( confint(SVAC_logit), title = "CIs using profiled log-likelihood" )
+
+####################confusion matrix 
+actual <- SVAC_model$overall_prev  # Actual classes
+predicted <- predict(SVAC_logit, type = "response")  # Predicted classes
+
+predicted_levels <- cut(predicted, breaks = c(-Inf, 0.25, 0.5, 0.75, Inf), labels = 0:3)
+
+# Load the caret package
+install.packages("caret")
+library(caret)
+
+# Create confusion matrix
+conf_matrix <- confusionMatrix(factor(actual), factor(predicted_levels))
+
+
+# Print the confusion matrix
+print(conf_matrix)
+
+sink("Images/confusion_matrix_output.txt")
+print(conf_matrix)
+sink()
+
+SVAC %>% 
+group_by(overall_prev) %>% 
+summarize(n = n())
+
+# counld try decision tree or random forrest
