@@ -555,6 +555,7 @@ SVAC_model$overall_prev <- fct_na_value_to_level(as_factor(SVAC_model$overall_pr
 
 SVAC_model <- SVAC_model[!apply(is.na(SVAC_model) | SVAC_model == "Unknown", 1, any), ]
 
+  
 #Step 1: split data
 train_index <- createDataPartition(SVAC_model$overall_prev, p = 0.8, list = FALSE)
 train_data <- SVAC_model[train_index, ]
@@ -583,5 +584,114 @@ tuned_model <- train(
 # Step 4: Evaluate the model on the test set
 predictions <- predict(tuned_model, newdata = test_data)
 
+
+####################################################################################
+################################### Random Forrest #################################
+####################################################################################
+
+#do all the data loading and cleaning again
+library(tidyverse)
+library(readxl)
+
+SVAC <- read_excel("Data/SVAC_3.2_conflictyears.xlsx")
+
+SVAC <- SVAC %>%
+  mutate(
+    form_rape = ifelse(grepl("1", form), 1, 0),
+    form_sexual_slavery = ifelse(grepl("2", form), 1, 0),
+    form_forced_prostitution = ifelse(grepl("3", form), 1, 0),
+    form_forced_pregnancy = ifelse(grepl("4", form), 1, 0),
+    form_forced_sterilization_abortion = ifelse(grepl("5", form), 1, 0),
+    form_sexual_mutilation = ifelse(grepl("6", form), 1, 0),
+    form_sexual_torture = ifelse(grepl("7", form), 1, 0)
+  )
+
+SVAC <- SVAC %>% 
+  select(!form)
+
+SVAC <- SVAC %>%
+  mutate(overall_prev = pmax(state_prev, hrw_prev, ai_prev))
+
+SVAC_model <- SVAC %>% 
+  select(actor_type, type_of_conflict, incompatibility, region, conflictyear, interm, postc, overall_prev, actorid)
+
+#shuffle the data
+shuffle_index <- sample(1:nrow(SVAC_model))
+SVAC_model <- SVAC_model[shuffle_index, ]
+
+#clean and remove unnecessary variables
+SVAC_model <- SVAC_model %>% 
+  mutate(actor_type = as_factor(actor_type),
+         type_of_conflict = as_factor(type_of_conflict),
+         incompatibility = as_factor(incompatibility),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         interm = as_factor(interm),
+         postc = as_factor(postc),
+         overall_prev = as_factor(overall_prev),
+         actorid = as_factor(actorid))
+
+SVAC_model <- SVAC_model %>% 
+  select(-actorid)
+
+SVAC_model <- SVAC_model %>% 
+  filter(!overall_prev == "-99")
+
+SVAC_model <- na.omit(SVAC_model)
+
+table(SVAC_model$overall_prev, useNA = "ifany")
+
+SVAC_model$overall_prev <- droplevels(SVAC_model$overall_prev)
+
+
+train_indices <- sample(1:nrow(SVAC_model), 0.7 * nrow(SVAC_model)) 
+train_data <- SVAC_model[train_indices, ]
+test_data <- SVAC_model[-train_indices, ]
+
+
+# Create the random forest model
+library(randomForest)
+
+
+# Create the random forest model with class weights
+rf_model <- randomForest(overall_prev ~ ., data = train_data, #classwt = class_weights)
+                          )
+
+print(rf_model)
+
+
+# Predict on test data
+predictions <- predict(rf_model, newdata = test_data)
+
+#test the model
+confusion_matrix <- confusionMatrix(predictions, test_data$overall_prev)
+print(confusion_matrix)
+
+
+#############  try to make better weights
+
+class_counts <- table(train_data$overall_prev)
+
+class_proportions <- class_counts / sum(class_counts)
+
+# Calculate inverse proportional weights
+inverse_weights <- 1 / class_proportions
+
+# Normalize weights to sum up to the number of classes
+normalized_weights <- inverse_weights / sum(inverse_weights)
+
+rf_model_balanced <- randomForest(overall_prev ~ ., data = train_data, classwt = normalized_weights)
+
+print(rf_model_balanced)
+
+
+# Predict on test data
+predictions_balanced <- predict(rf_model_balanced, newdata = test_data)
+
+#test the model
+confusion_matrix_balanced <- confusionMatrix(predictions_balanced, test_data$overall_prev)
+print(confusion_matrix_balanced)
 
 
