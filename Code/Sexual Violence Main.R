@@ -380,6 +380,208 @@ plot.roc(h$rocs[[6]],add=T, col = 'lightblue',
          legacy.axes = T,
          print.auc.adj = c(0,11))
 
+####################################################################################
+################################### Decision Tree ##################################
+####################################################################################
+
+#do all the data loading and cleaning again
+library(tidyverse)
+library(readxl)
+
+SVAC <- read_excel("Data/SVAC_3.2_conflictyears.xlsx")
+
+SVAC <- SVAC %>%
+  mutate(
+    form_rape = ifelse(grepl("1", form), 1, 0),
+    form_sexual_slavery = ifelse(grepl("2", form), 1, 0),
+    form_forced_prostitution = ifelse(grepl("3", form), 1, 0),
+    form_forced_pregnancy = ifelse(grepl("4", form), 1, 0),
+    form_forced_sterilization_abortion = ifelse(grepl("5", form), 1, 0),
+    form_sexual_mutilation = ifelse(grepl("6", form), 1, 0),
+    form_sexual_torture = ifelse(grepl("7", form), 1, 0)
+  )
+
+SVAC <- SVAC %>% 
+  select(!form)
+
+SVAC <- SVAC %>%
+  mutate(overall_prev = pmax(state_prev, hrw_prev, ai_prev))
+
+SVAC_model <- SVAC %>% 
+  select(actor_type, type_of_conflict, incompatibility, region, conflictyear, interm, postc, overall_prev, actorid)
+
+#shuffle the data
+shuffle_index <- sample(1:nrow(SVAC_model))
+SVAC_model <- SVAC_model[shuffle_index, ]
+
+#clean and remove unnecessary variables
+SVAC_model <- SVAC_model %>% 
+  mutate(actor_type = as_factor(actor_type),
+       type_of_conflict = as_factor(type_of_conflict),
+       incompatibility = as_factor(incompatibility),
+       region = as_factor(region),
+       conflictyear = as_factor(conflictyear),
+       region = as_factor(region),
+       conflictyear = as_factor(conflictyear),
+       interm = as_factor(interm),
+       postc = as_factor(postc),
+       overall_prev = as_factor(overall_prev),
+       actorid = as_factor(actorid))
+
+SVAC_model <- SVAC_model %>% 
+  select(-actorid)
+
+SVAC_model <- SVAC_model %>% 
+  filter(!overall_prev == "-99")
+
+#create train and test
+install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+
+create_train_test <- function(data, size = 0.8, train = TRUE) {
+  n_row = nrow(data)
+  total_row = size * n_row
+  train_sample <- 1: total_row
+  if (train == TRUE) {
+    return (data[train_sample, ])
+  } else {
+    return (data[-train_sample, ])
+  }
+}
+
+data_train <- create_train_test(SVAC_model, 0.8, train = TRUE)
+data_test <- create_train_test(SVAC_model, 0.8, train = FALSE)
+dim(data_train)
+dim(data_test)
+
+prop.table(table(SVAC_model$overall_prev))
+
+fit <- rpart(overall_prev ~ ., data = data_train, method = "class")
+rpart.plot(fit)
+
+prp(fit)
 
 
-# will try decision tree and random forrest
+
+#didn't work, try Caret
+
+library(caret)
+
+SVAC_model <- SVAC_model[complete.cases(SVAC_model), ]
+
+SVAC_model <- SVAC_model %>% 
+  select(-c(conflictyear, interm))
+
+SVAC_model <- SVAC_model %>%
+  mutate(
+    actor_type = case_when(
+      actor_type == "1" ~ "State government",
+      actor_type == "2" ~ "State supporting state",
+      actor_type == "3" ~ "Rebel group",
+      actor_type == "4" ~ "State supporting rebel group",
+      actor_type == "5" ~ "Secondary state (side B)",
+      actor_type == "6" ~ "Pro-government militias (PGMs)"
+    ),
+    type_of_conflict = case_when(
+      type_of_conflict == "2" ~ "Interstate Conflict",
+      type_of_conflict == "3" ~ "Intrastate Conflict",
+      type_of_conflict == "4" ~ "Internationalized Internal Armed Conflict"
+    ),
+    incompatibility = case_when(
+      incompatibility == "0" ~ "None",
+      incompatibility == "1" ~ "Territory",
+      incompatibility == "2" ~ "Government",
+      incompatibility == "3" ~ "Government and Territory"
+    ),
+    region = case_when(
+      region == "1" ~ "Europe",
+      region == "2" ~ "Middle East",
+      region == "3" ~ "Asia",
+      region == "4" ~ "Africa",
+      region == "5" ~ "Americas"
+    ),
+    postc = case_when(
+      postc == "0" ~ "Within conflict",
+      postc == "1" ~ "Post conflict"
+    ),
+    overall_prev = case_when(
+      overall_prev == "0" ~ "not_prevalent",
+      overall_prev == "1" ~ "prevalent",
+      overall_prev == "2" ~ "very_prevalent",
+      overall_prev == "3" ~ "extremely_prevalent")
+  )
+
+SVAC_model <- SVAC_model %>% 
+  select(!c(conflictyear, interm))
+
+# Convert each variable to a factor
+SVAC_model$actor_type <- as_factor(SVAC_model$actor_type)
+SVAC_model$type_of_conflict <- as_factor(SVAC_model$type_of_conflict)
+SVAC_model$incompatibility <- as_factor(SVAC_model$incompatibility)
+SVAC_model$region <- as_factor(SVAC_model$region)
+SVAC_model$postc <- as_factor(SVAC_model$postc)
+SVAC_model$overall_prev <- as_factor(SVAC_model$overall_prev)
+
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Impute missing values with the mode of `overall_prev`
+SVAC_model$overall_prev[is.na(SVAC_model$overall_prev)] <- Mode(SVAC_model$overall_prev)
+
+# Now, proceed with renaming levels and converting variables to factors
+# Rename levels
+SVAC_model$overall_prev <- factor(SVAC_model$overall_prev,
+                                  levels = c("0" = "not_prevalent",
+                                             "1" = "prevalent",
+                                             "2" = "very_prevalent",
+                                             "3" = "extremely_prevalent"))
+
+# Convert other variables to factors
+SVAC_model$actor_type <- as_factor(SVAC_model$actor_type)
+SVAC_model$type_of_conflict <- as_factor(SVAC_model$type_of_conflict)
+SVAC_model$incompatibility <- as_factor(SVAC_model$incompatibility)
+SVAC_model$region <- as_factor(SVAC_model$region)
+SVAC_model$postc <- as_factor(SVAC_model$postc)
+
+SVAC_model$actor_type <- fct_na_value_to_level(as_factor(SVAC_model$actor_type))
+SVAC_model$type_of_conflict <- fct_na_value_to_level(as_factor(SVAC_model$type_of_conflict), na_level = "Unknown")
+SVAC_model$incompatibility <- fct_na_value_to_level(as_factor(SVAC_model$incompatibility), na_level = "Unknown")
+SVAC_model$region <- fct_na_value_to_level(as_factor(SVAC_model$region), na_level = "Unknown")
+SVAC_model$postc <- fct_na_value_to_level(as_factor(SVAC_model$postc), na_level = "Unknown")
+SVAC_model$overall_prev <- fct_na_value_to_level(as_factor(SVAC_model$overall_prev), na_level = "Unknown")
+
+SVAC_model <- SVAC_model[!apply(is.na(SVAC_model) | SVAC_model == "Unknown", 1, any), ]
+
+#Step 1: split data
+train_index <- createDataPartition(SVAC_model$overall_prev, p = 0.8, list = FALSE)
+train_data <- SVAC_model[train_index, ]
+test_data <- SVAC_model[-train_index, ]
+
+# Step 2: Compute class weights
+# Assuming you want to weight the classes inversely proportional to their frequencies
+class_weights <- ifelse(train_data$overall_prev == 0, 1, 0.5)
+
+# Step 3: Train the decision tree model with weighted data
+
+tuned_model <- train(
+  overall_prev ~ ., 
+  data = train_data, 
+  method = "rpart",
+  trControl = trainControl(
+    method = "cv", 
+    number = 10, 
+    classProbs = TRUE, 
+    summaryFunction = multiClassSummary
+  ),
+  weights = class_weights,
+  tuneLength = 10
+)
+
+# Step 4: Evaluate the model on the test set
+predictions <- predict(tuned_model, newdata = test_data)
+
+
+
