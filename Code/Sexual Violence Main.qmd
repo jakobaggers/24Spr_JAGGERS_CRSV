@@ -1,0 +1,304 @@
+---
+title: "Sexual Violence Main"
+author: "Jakob Aggers"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: true
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Packages
+```{r}
+library(tidyverse)
+library(readxl)
+library(forcats)
+```
+
+## Load Data
+```{r}
+acled_sexual_violence <- read_csv("../Data/acled_sexual_violence.csv", name_repair = "universal")
+
+SVAC <- read_excel("../Data/SVAC_3.2_conflictyears.xlsx")
+
+SVAC_complete <- read_excel("../Data/SVAC_3.2_complete.xlsx")
+
+```
+
+## Data Cleaning
+### SVAC
+```{r}
+##############  SVAC  ############## 
+SVAC <- SVAC %>%
+  mutate(
+    form_rape = ifelse(grepl("1", form), 1, 0),
+    form_sexual_slavery = ifelse(grepl("2", form), 1, 0),
+    form_forced_prostitution = ifelse(grepl("3", form), 1, 0),
+    form_forced_pregnancy = ifelse(grepl("4", form), 1, 0),
+    form_forced_sterilization_abortion = ifelse(grepl("5", form), 1, 0),
+    form_sexual_mutilation = ifelse(grepl("6", form), 1, 0),
+    form_sexual_torture = ifelse(grepl("7", form), 1, 0)
+  )
+
+SVAC <- SVAC %>% 
+  select(!form)
+
+SVAC <- SVAC %>%
+  mutate(overall_prev = pmax(state_prev, hrw_prev, ai_prev))
+
+SVAC <- SVAC %>%
+  mutate(
+    actor_type = case_when(
+      actor_type == "1" ~ "State government",
+      actor_type == "2" ~ "State supporting state",
+      actor_type == "3" ~ "Rebel group",
+      actor_type == "4" ~ "State supporting rebel group",
+      actor_type == "5" ~ "Secondary state (side B)",
+      actor_type == "6" ~ "Pro-government militias (PGMs)"
+    ),
+    type_of_conflict = case_when(
+      type_of_conflict == "2" ~ "Interstate Conflict",
+      type_of_conflict == "3" ~ "Intrastate Conflict",
+      type_of_conflict == "4" ~ "Internationalized Internal Armed Conflict"
+    ),
+    incompatibility = case_when(
+      incompatibility == "0" ~ "None",
+      incompatibility == "1" ~ "Territory",
+      incompatibility == "2" ~ "Government",
+      incompatibility == "3" ~ "Government and Territory"
+    ),
+    region = case_when(
+      region == "1" ~ "Europe",
+      region == "2" ~ "Middle East",
+      region == "3" ~ "Asia",
+      region == "4" ~ "Africa",
+      region == "5" ~ "Americas"
+    ),
+    postc = case_when(
+      postc == "0" ~ "Within conflict",
+      postc == "1" ~ "Post conflict"
+    ),
+    conflictyear = case_when(
+      conflictyear == "0" ~ "Not in active conflict",
+      conflictyear == "1" ~ "In active conflict"
+    ),
+    interm = case_when(
+      interm == "0" ~ "Not within an interim conflict period",
+      interm == "1" ~ "Within an interim conflict period"
+    ),
+     )
+
+SVAC$overall_prev <- factor(SVAC$overall_prev, levels = c(0, 1, 2, 3),
+                            labels = c("Sexual violence not present", "Overall Prevalence: Low", 
+                                       "Overall Prevalence: Medium", "Overall Prevalence: High"))
+
+SVAC <- SVAC %>% 
+  mutate(actor_type = as_factor(actor_type),
+         type_of_conflict = as_factor(type_of_conflict),
+         incompatibility = as_factor(incompatibility),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         region = as_factor(region),
+         conflictyear = as_factor(conflictyear),
+         interm = as_factor(interm),
+         postc = as_factor(postc),
+         actorid = as_factor(actorid))
+
+
+SVAC <- SVAC %>% 
+  filter(!overall_prev == "-99")
+
+filtered_SVAC <- SVAC %>%
+  filter(overall_prev != "Sexual violence not present")
+```
+
+### ACLED
+```{r}
+##############  ACLED  ##############  
+acled_sexual_violence <- 
+  acled_sexual_violence %>%
+  mutate(Actor_Type = case_when(
+    inter1 == 1 ~ "State Actor",
+    inter1 == 2 ~ "Rebel Group",
+    inter1 == 3 ~ "Political Militias",
+    inter1 == 4 ~ "Identity Militias",
+    inter1 == 5 ~ "Rioters",
+    inter1 == 6 ~ "Protesters",
+    inter1 == 7 ~ "Civilians",
+    inter1 == 8 ~ "External/Other Forces",
+    TRUE ~ NA_character_  
+  ))
+
+
+acled_sexual_violence %>% 
+  group_by(Actor_Type) %>% 
+  summarize(n = n())
+# to many individual civilian actions, remove them
+
+acled_sexual_violence <- 
+  acled_sexual_violence %>% 
+  filter(Actor_Type != "Civilians")
+
+```
+
+
+## EDA for SVAC (During Conflict)
+
+### Hisograms and Line Graphs for Overall_prev
+```{r}
+# Histogram by Year
+ggplot(SVAC, aes(x = year)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Observations by Year", x = "Year", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Histogram by year by overall prev
+SVAC %>%
+  ggplot(aes(x = year, fill = overall_prev)) +
+  geom_histogram(binwidth = 1, position = "stack", alpha = 0.7) +
+  scale_fill_manual(values = c("Sexual violence not present" = "skyblue",
+                   "Overall Prevalence: Low" = "yellow",
+                   "Overall Prevalence: Medium" = "orange",
+                   "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Years, Colored by Overall Prevalence",
+       x = "Year",
+       y = "Count",
+       fill = "Overall Prevalence") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Histogram by year by overall prev without 0's
+filtered_SVAC %>%
+  ggplot(aes(x = year, fill = overall_prev)) +
+  geom_histogram(binwidth = 1, position = "stack", alpha = 0.7) +
+  scale_fill_manual(values = c("Overall Prevalence: Low" = "yellow",
+                   "Overall Prevalence: Medium" = "orange",
+                   "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Years, Colored by Overall Prevalence",
+       x = "Year",
+       y = "Count",
+       fill = "Overall Prevalence") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+ #### Now Line graphs
+summary_SVAC <- SVAC %>%
+  group_by(year, overall_prev) %>%
+  summarise(count = n(), .groups = 'drop')
+
+ggplot(summary_SVAC, aes(x = year, y = count, color = overall_prev, group = overall_prev)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Prevalence of Sexual Violence in Conflict by Year (including not present)",
+       x = "Year",
+       y = "Count",
+       color = "Prevalence Category") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# SVAC filtered
+summary_data_filtered <- filtered_SVAC %>%
+  group_by(year, overall_prev) %>%
+  summarise(count = n(), .groups = 'drop')
+
+ggplot(summary_data_filtered, aes(x = year, y = count, color = overall_prev, group = overall_prev)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Prevalence of Sexual Violence in Conflict by Year",
+       x = "Year",
+       y = "Count",
+       color = "Prevalence Category") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+### Charts for Distribution of Other Variables
+
+```{r}
+# Actor Type
+ggplot(SVAC, aes(x = actor_type)) +
+  geom_bar(fill = "lightgreen", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Actor Types", x = "Actor Type", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#actor type + overall_prev 
+ggplot(SVAC, aes(x = actor_type, fill = overall_prev)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Sexual violence not present" = "lightblue",
+                                "Overall Prevalence: Low" = "yellow",
+                                "Overall Prevalence: Medium" = "orange",
+                                "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Actor Types by Overall Prevalence", 
+       x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+#actor type + overall_prev without prev = 0
+ggplot(filtered_SVAC, aes(x = actor_type, fill = overall_prev)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Overall Prevalence: Low" = "yellow",
+                                "Overall Prevalence: Medium" = "orange",
+                                "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Actor Types by Overall Prevalence", 
+       x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Type of Conflict
+ggplot(SVAC, aes(x = type_of_conflict)) +
+  geom_bar(fill = "lightcoral", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Conflict Types", x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#region
+ggplot(SVAC, aes(x = region)) +
+  geom_bar(fill = "lightblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Conflict Regions", x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#region + overall_prev
+ggplot(SVAC, aes(x = region, fill = overall_prev)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Sexual violence not present" = "lightblue",
+                                "Overall Prevalence: Low" = "yellow",
+                                "Overall Prevalence: Medium" = "orange",
+                                "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Conflict Regions by Overall Prevalence", 
+       x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+#region + overall_prev without prev = 0
+ggplot(filtered_SVAC, aes(x = region, fill = overall_prev)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Overall Prevalence: Low" = "yellow",
+                                "Overall Prevalence: Medium" = "orange",
+                                "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Conflict REgions by Overall Prevalence", 
+       x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+```

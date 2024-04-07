@@ -99,13 +99,12 @@ SVAC_prev <- SVAC_prev %>%
     form_sexual_torture = ifelse(grepl("7", form), 1, 0)
   )
 
-
 # Calculate Cramer's V for each pair of categorical variables
-install.packages("vcd")
+# install.packages("vcd")
 library(vcd)
-install.packages("corrplot")
+# install.packages("corrplot")
 library(corrplot)
-install.packages("Hmisc")
+# install.packages("Hmisc")
 library(Hmisc)
 
 SVAC_prev_NA <- SVAC_prev %>% 
@@ -620,6 +619,8 @@ shuffle_index <- sample(1:nrow(SVAC_model))
 SVAC_model <- SVAC_model[shuffle_index, ]
 
 #clean and remove unnecessary variables
+
+library(forcats)
 SVAC_model <- SVAC_model %>% 
   mutate(actor_type = as_factor(actor_type),
          type_of_conflict = as_factor(type_of_conflict),
@@ -686,12 +687,19 @@ rf_model_balanced <- randomForest(overall_prev ~ ., data = train_data, classwt =
 
 print(rf_model_balanced)
 
-
 # Predict on test data
 predictions_balanced <- predict(rf_model_balanced, newdata = test_data)
 
 #test the model
 confusion_matrix_balanced <- confusionMatrix(predictions_balanced, test_data$overall_prev)
 print(confusion_matrix_balanced)
+
+
+
+
+
+
+
+
 
 
