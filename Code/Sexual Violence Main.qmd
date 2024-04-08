@@ -654,6 +654,11 @@ chisqres_SVAC_results <- data.frame(
 )
 
 chisqres_SVAC_results
+
+acled_region_actor_ranktable = xtabs(~ region + actor_type, data = SVAC)
+
+chisqres_acled_region_actor = chisq.test(acled_region_actor_ranktable)
+chisqres_acled_region_actor 
 ```
 ### Chi Squared SVAC Complete
 
@@ -677,7 +682,7 @@ chisqres_postc = chisq.test(postc_ranktable)
 chisqres_postc
 
 
-chiqres_SVAC_complete_results <- data.frame(
+chisqres_SVAC_complete_results <- data.frame(
   Variable = c("Conflictyear", "Interm", "Postc"),
   ChiSquared = c(chisqres_conflictyear$statistic, chisqres_interm$statistic, chisqres_postc$statistic),
   DegreesOfFreedom = c(chisqres_conflictyear$parameter, chisqres_interm$parameter, chisqres_postc$parameter),
@@ -686,6 +691,26 @@ chiqres_SVAC_complete_results <- data.frame(
   Independence = c(chisqres_conflictyear$p.value < 0.05, chisqres_interm$p.value < 0.05, chisqres_postc$p.value < 0.05)
 )
 
-chiqres_SVAC_complete_results
+chisqres_SVAC_complete_results
+```
 
+
+### Chi Squared ACLED
+```{r}
+actor_region_ranktable = xtabs(~ Actor_Type + region, data = acled_sexual_violence)
+actor_region_ranktable
+
+chisqres_actor_region = chisq.test(actor_region_ranktable)
+chisqres_actor_region
+
+chisqres_acled_results <- data.frame(
+  Variable = c("Actor Region"),
+  ChiSquared = chisqres_actor_region$statistic,
+  DegreesOfFreedom = chisqres_actor_region$parameter,
+  PValue = chisqres_actor_region$p.value,
+  WarningMessage = TRUE,
+  Independence = chisqres_actor_region$p.value < 0.05
+)
+
+chisqres_acled_results
 ```
