@@ -22,6 +22,7 @@ editor_options:
 library(tidyverse)
 library(readxl)
 library(forcats)
+library(ezids)
 ```
 
 ## Load Data
@@ -578,3 +579,113 @@ SVAC_complete %>%
   summarize(n = n())
 ```
 
+### EDA for ACLED
+```{r}
+ggplot(acled_sexual_violence, aes(x = year)) +
+  geom_histogram(binwidth = 1, fill = "salmon", color = "black") +
+  theme_minimal() +
+  labs(title = "ACLED Distribution of Observations by Year (Complete)", x = "Year", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acled_sexual_violence %>% 
+  group_by(Actor_Type) %>% 
+  summarize(n = n())
+
+summary_acled <- acled_sexual_violence %>%
+  group_by(year, Actor_Type) %>%
+  summarise(count = n(), .groups = 'drop')
+
+ggplot(summary_acled, aes(x = year, y = count, color = Actor_Type, group = Actor_Type)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "ACLED Actor Type Prevalence by Year",
+       x = "Year",
+       y = "Count",
+       color = "Prevalence Category") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acled_sexual_violence %>% 
+  group_by(region, Actor_Type) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+
+acled_sexual_violence %>% 
+  group_by(region) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+```
+
+## Chi Squared
+
+### Chi Squared SVAC
+
+```{r chisq}
+# region
+region_ranktable = xtabs(~ overall_prev + region, data = SVAC)
+
+chisqres_region = chisq.test(region_ranktable)
+chisqres_region
+
+# actor_type
+actor_type_ranktable = xtabs(~ overall_prev + actor_type, data = SVAC)
+
+chisqres_actor_type = chisq.test(actor_type_ranktable)
+chisqres_actor_type
+
+# incompatibility
+incompatibility_ranktable = xtabs(~ overall_prev + incompatibility, data = SVAC)
+
+chisqres_incompatibility = chisq.test(incompatibility_ranktable)
+chisqres_incompatibility 
+
+# type_of_conflict
+type_of_conflict_ranktable = xtabs(~ overall_prev + type_of_conflict, data = SVAC)
+
+chisqres_type_of_conflict = chisq.test(type_of_conflict_ranktable)
+chisqres_type_of_conflict 
+
+chisqres_SVAC_results <- data.frame(
+  Variable = c("Region", "Actor Type", "Incompatibility", "Type of Conflict"),
+  ChiSquared = c(chisqres_region$statistic, chisqres_actor_type$statistic, chisqres_incompatibility$statistic, chisqres_type_of_conflict$statistic),
+  DegreesOfFreedom = c(chisqres_region$parameter, chisqres_actor_type$parameter, chisqres_incompatibility$parameter, chisqres_type_of_conflict$parameter),
+  P_Value = c(chisqres_region$p.value, chisqres_actor_type$p.value, chisqres_incompatibility$p.value, chisqres_type_of_conflict$p.value),
+  WarningMessage = c(FALSE, TRUE, TRUE, TRUE), # Manually indicate warning messages
+  Independence = c(chisqres_region$p.value < 0.05, chisqres_actor_type$p.value < 0.05, chisqres_incompatibility$p.value < 0.05, chisqres_type_of_conflict$p.value < 0.05)
+)
+
+chisqres_SVAC_results
+```
+### Chi Squared SVAC Complete
+
+```{r}
+# conflictyear
+conflictyear_ranktable = xtabs(~ overall_prev + conflictyear, data = SVAC_complete)
+
+chisqres_conflictyear = chisq.test(conflictyear_ranktable)
+chisqres_conflictyear
+
+# interm
+interm_ranktable = xtabs(~ overall_prev + interm, data = SVAC_complete)
+
+chisqres_interm = chisq.test(interm_ranktable)
+chisqres_interm
+
+# postc
+postc_ranktable = xtabs(~ overall_prev + postc, data = SVAC_complete)
+
+chisqres_postc = chisq.test(postc_ranktable)
+chisqres_postc
+
+
+chiqres_SVAC_complete_results <- data.frame(
+  Variable = c("Conflictyear", "Interm", "Postc"),
+  ChiSquared = c(chisqres_conflictyear$statistic, chisqres_interm$statistic, chisqres_postc$statistic),
+  DegreesOfFreedom = c(chisqres_conflictyear$parameter, chisqres_interm$parameter, chisqres_postc$parameter),
+  PValue = c(chisqres_conflictyear$p.value, chisqres_interm$p.value, chisqres_postc$p.value),
+  WarningMessage = c(FALSE, FALSE, FALSE), # No warning messages provided
+  Independence = c(chisqres_conflictyear$p.value < 0.05, chisqres_interm$p.value < 0.05, chisqres_postc$p.value < 0.05)
+)
+
+chiqres_SVAC_complete_results
+
+```
