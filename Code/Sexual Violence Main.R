@@ -698,8 +698,9 @@ print(confusion_matrix_balanced)
 
 
 
+acled_sexual_violence <- read_csv("Code/acled_sexual_violence.csv", name_repair = "universal")
 
-
+min(acled_sexual_violence$year)
 
 
 

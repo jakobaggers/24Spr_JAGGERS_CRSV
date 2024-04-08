@@ -510,7 +510,7 @@ ggplot(filtered_SVAC_complete, aes(x = actor_type, fill = overall_prev)) +
         axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Type of Conflict
-ggplot(SVAC_complete, aes(x = type_of_conflict)) +
+ggplot(SVAC_complete, aes(x = type)) +
   geom_bar(fill = "lightcoral", color = "black") +
   theme_minimal() +
   labs(title = "Distribution of Conflict Types (Complete)", x = "Type of Conflict", y = "Count") +
@@ -714,3 +714,7 @@ chisqres_acled_results <- data.frame(
 
 chisqres_acled_results
 ```
+
+
+
+
