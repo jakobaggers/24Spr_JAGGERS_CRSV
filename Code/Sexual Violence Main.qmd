@@ -715,6 +715,34 @@ chisqres_acled_results <- data.frame(
 chisqres_acled_results
 ```
 
+## Vizualizations
+```{r}
+# interim, postc, and conflictyear
+SVAC_complete_prev <- SVAC_complete %>% 
+  filter(prev_binary == "Prevalent")
 
+
+# Create the plot for conflictyear
+ggplot(SVAC_complete_prev, aes(x = year, color = conflictyear)) +
+  geom_line(stat = "count") +
+  scale_color_discrete() +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  theme_minimal()
+
+# Create the plot for postc
+ggplot(SVAC_complete_prev, aes(x = year, color = postc)) +
+  geom_line(stat = "count") +
+  scale_color_discrete() +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  theme_minimal()
+
+# Create the plot for interm
+ggplot(SVAC_complete_prev, aes(x = year, color = interm)) +
+  geom_line(stat = "count") +
+  scale_color_discrete() +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  theme_minimal()
+
+```
 
 

@@ -7,6 +7,7 @@ options(repos = c(CRAN = "https://cloud.r-project.org"))
 acled_sexual_violence <- read_csv("acled_sexual_violence.csv", name_repair = "universal")
 
 
+
 #######################                          #######################
 #######################          Part 1:         #######################
 #######################          Shiny R         #######################
@@ -78,9 +79,10 @@ ui <- fluidPage(
   ),
   leafletOutput("map"),
   fluidRow(
-    column(12, style = "margin-top: 20px;", 
+    column(12, style = "margin-top: 20px;",
+           checkboxGroupInput("graph_type", "Graph Type", choices = c("Frequency", "Fatalities")),
            plotOutput("frequency_plot")
-    )
+           )
   ),
   fluidRow(
     column(12,
@@ -167,14 +169,50 @@ server <- function(input, output, session) {
         group_by(year) %>%
         summarise(frequency = n())
       
-      ggplot(frequency_data, aes(x = factor(year), y = frequency)) +
-        geom_bar(stat = "identity", fill = "skyblue", color = "black") +
-        labs(title = "Frequency of Sexual Violence Events by Year and Search Criteria",
-             x = "Year", y = "Frequency") +
-        theme_bw() +
-        theme(plot.title = element_text(hjust = 0.5,  size = 15, family = "Georgia"),
-              axis.text.x = element_text(angle = 45, hjust = 1))
-    })
+      frequency_data_fatal <- filtered_data %>%
+        mutate(year = lubridate::year(event_date)) %>%
+        group_by(year) %>%
+       summarise(fatalities = sum(fatalities))
+      
+      
+        if ("Frequency" %in% input$graph_type && "Fatalities" %in% input$graph_type) {
+          ggplot() +
+            geom_line(data = frequency_data, aes(x = year, y = frequency, color = "Frequency"), size = 1.5) +
+            geom_line(data = frequency_data_fatal, aes(x = year, y = fatalities, color = "Fatalities"), size = 1.5) +
+            labs(title = "Frequency and Fatalities of Sexual Violence Events by Year and Search Criteria",
+                 x = "Year", y = "Count") +
+            scale_color_manual(values = c(Frequency = "lightblue", Fatalities = "salmon")) +
+            theme_bw() +
+            theme(plot.title = element_text(hjust = 0.5, size = 15, family = "Georgia"),
+                  axis.text.x = element_text(angle = 45, hjust = 1))
+        } else if ("Frequency" %in% input$graph_type) {
+          ggplot(data = frequency_data, aes(x = year, y = frequency, color = "Frequency")) +
+            geom_line(size = 1.5) +
+            labs(title = "Frequency of Sexual Violence Events by Year and Search Criteria",
+                 x = "Year", y = "Count") +
+            scale_color_manual(values = c(Frequency = "lightblue")) +
+            theme_bw() +
+            theme(plot.title = element_text(hjust = 0.5, size = 15, family = "Georgia"),
+                  axis.text.x = element_text(angle = 45, hjust = 1))
+        } else if ("Fatalities" %in% input$graph_type) {
+          ggplot(data = frequency_data_fatal, aes(x = year, y = fatalities, color = "Fatalities")) +
+            geom_line(size = 1.5) +
+            labs(title = "Fatalities of Sexual Violence Events by Year and Search Criteria",
+                 x = "Year", y = "Count") +
+            scale_color_manual(values = c(Fatalities = "salmon")) +
+            theme_bw() +
+            theme(plot.title = element_text(hjust = 0.5, size = 15, family = "Georgia"),
+                  axis.text.x = element_text(angle = 45, hjust = 1))
+        } else {
+          ggplot() +  # Add a default plot in case none of the checkboxes are selected
+            labs(title = "No data selected",
+                 x = "Year", y = "Count") +
+            theme_bw() +
+            theme(plot.title = element_text(hjust = 0.5, size = 15, family = "Georgia"))
+        }
+      })
+      
+
     
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 2)) %>%
