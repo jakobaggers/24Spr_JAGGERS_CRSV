@@ -74,7 +74,12 @@ ui <- fluidPage(
         }
         "
       )
-    )
+    ),
+    tags$style(HTML("
+    .slider-width-custom {
+      width: 100%;  /* or any other width */
+    }
+  "))
   ),
   title = "World Map of Conflict Related Sexual Violence",
   titlePanel(
@@ -145,169 +150,188 @@ ui <- fluidPage(
              ),
              leafletOutput("heatmap")
     ),
-    tabPanel("Case Study: Ukraine", fluid = TRUE,
-             leafletOutput("ukraine_map"),
-             br(),
-             sliderInput("date_slider_ukraine", "Date Range", min = as.Date(min(acled_sexual_violence$event_date)),
-                         max = as.Date(max(acled_sexual_violence$event_date)), value = as.Date(min(acled_sexual_violence$event_date))),
-             actionButton("play_button_ukraine", "Play")
+    tabPanel("Case Study: Ukraine",
+             sliderInput("date_slider_ukraine", "Date Range",
+                         min = as.Date("2018-01-01"), 
+                         max = Sys.Date(), 
+                         value = as.Date("2018-01-01"), step = 7,
+                         animate = animationOptions(interval = 50, loop = FALSE)),
+             leafletOutput("ukraine_map")
     ),
-    tabPanel("Case Study: Myanmar", fluid = TRUE,
-             leafletOutput("myanmar_map"),
-             br(),
-             sliderInput("date_slider_myanmar", "Date Range", min = as.Date(min(acled_sexual_violence$event_date)),
-                         max = as.Date(max(acled_sexual_violence$event_date)), value = as.Date(min(acled_sexual_violence$event_date))),
-             actionButton("play_button_myanmar", "Play")
+    tabPanel("Case Study: Myanmar",
+             sliderInput("date_slider_myanmar", "Date Range",
+                         min = as.Date("2010-01-01"), 
+                         max = Sys.Date(), 
+                         value = as.Date("2010-01-01"), step = 7,
+                         animate = animationOptions(interval = 50, loop = FALSE)),
+             leafletOutput("myanmar_map")
     )
   )
 )
 
-# Server
 server <- function(input, output, session) {
-  # Create reactive values to hold filtered data and other reactive values
-  rv <- reactiveValues(
-    filtered_data = acled_sexual_violence,
-    country_choices = NULL,
-    type_choices = NULL
-  )
-  
-  # Define reactive expressions for updating select inputs based on data
-  observe({
-    rv$country_choices <- c("Select All", unique(rv$filtered_data$country))
-    rv$type_choices <- c("Select All", unique(rv$filtered_data$Actor_Type))
-  })
-  
-  observe({
-    updateSelectInput(session, "country_select", choices = rv$country_choices)
-    updateSelectInput(session, "type", choices = rv$type_choices)
-    
-    updateSelectizeInput(session, "region_select", choices = c(
-      "Select All", c(
-        "Eastern Africa", "Middle Africa", "Western Africa", "Southern Africa",
-        "Northern Africa", "South Asia", "Southeast Asia", "East Asia", "Central Asia",
-        "Caucasus and Central Asia", "Oceania", "South America", "Caribbean",
-        "Central America", "North America", "Europe", "Middle East"
-      )
-    ))
-    
-    # Update date range input based on checkbox
-    if (input$all_dates) {
-      updateDateRangeInput(session, "date_select", start = min(rv$filtered_data$event_date), end = max(rv$filtered_data$event_date))
+  # Reactive expressions for the main Instances tab
+  instances_data <- reactive({
+    data <- acled_sexual_violence
+    if (!input$all_dates) {
+      data <- data %>% filter(event_date >= input$date_select[1] & event_date <= input$date_select[2])
     }
-  })
-  
-  # Define reactive expression for filtered data based on user inputs
-  filtered_data <- reactive({
-    filtered_data <- acled_sexual_violence
-    
-    # Filter by country
     if (!is.null(input$country_select) && input$country_select != "Select All") {
-      filtered_data <- filtered_data %>% filter(country %in% input$country_select)
+      data <- data %>% filter(country %in% input$country_select)
     }
-    
-    # Filter by region
-    if (!is.null(input$region_select) && !identical(input$region_select, "Select All")) {
-      filtered_data <- filtered_data %>% filter(region %in% input$region_select)
+    if (!is.null(input$region_select) && input$region_select != "Select All") {
+      data <- data %>% filter(region %in% input$region_select)
     }
-    
-    # Filter by actor type
     if (!is.null(input$type) && input$type != "Select All") {
-      filtered_data <- filtered_data %>% filter(Actor_Type %in% input$type)
+      data <- data %>% filter(Actor_Type %in% input$type)
     }
-    
-    # Filter by date range
-    filtered_data <- filtered_data %>%
-      filter(event_date >= input$date_select[1] & event_date <= input$date_select[2])
-    
-    # Filter by search input
     if (!is.null(input$search_input) && input$search_input != "") {
       search_term <- input$search_input
-      filtered_data <- filtered_data %>%
+      data <- data %>%
         filter(str_detect(notes, search_term) |
                  str_detect(actor1, search_term) |
                  str_detect(source, search_term) |
-                 str_detect(assoc_actor_1, search_term)
-        )
+                 str_detect(assoc_actor_1, search_term))
     }
-    
-    return(filtered_data)
+    return(data)
   })
   
-  # Render map
+  # Reactive expressions for the Heatmap
+  heatmap_data <- reactive({
+    data <- acled_sexual_violence
+    if (!input$all_dates_heatmap) {
+      data <- data %>% filter(event_date >= input$date_select_heatmap[1] & event_date <= input$date_select_heatmap[2])
+    }
+    if (!is.null(input$country_select_heatmap) && input$country_select_heatmap != "Select All") {
+      data <- data %>% filter(country %in% input$country_select_heatmap)
+    }
+    if (!is.null(input$region_select_heatmap) && input$region_select_heatmap != "Select All") {
+      data <- data %>% filter(region %in% input$region_select_heatmap)
+    }
+    if (!is.null(input$type_heatmap) && input$type_heatmap != "Select All") {
+      data <- data %>% filter(Actor_Type %in% input$type_heatmap)
+    }
+    return(data)
+  })
+  
+  # Reactive expressions for Ukraine case study
+  ukraine_data <- reactive({
+    data <- acled_sexual_violence %>% filter(country == "Ukraine")
+    if (!is.null(input$date_slider_ukraine)) {
+      data <- data %>% filter(event_date >= input$date_slider_ukraine[1] & event_date <= input$date_slider_ukraine[2])
+    }
+    return(data)
+  })
+  
+  # Reactive expressions for Myanmar case study
+  myanmar_data <- reactive({
+    data <- acled_sexual_violence %>% filter(country == "Myanmar")
+    if (!is.null(input$date_slider_myanmar)) {
+      data <- data %>% filter(event_date >= input$date_slider_myanmar[1] & event_date <= input$date_slider_myanmar[2])
+    }
+    return(data)
+  })
+  
+  # Observers for updating input selections
+  observe({
+    choices <- c("Select All", unique(acled_sexual_violence$country))
+    updateSelectInput(session, "country_select", choices = choices)
+    updateSelectInput(session, "country_select_heatmap", choices = choices)
+    
+    type_choices <- c("Select All", unique(acled_sexual_violence$Actor_Type))
+    updateSelectInput(session, "type", choices = type_choices)
+    updateSelectInput(session, "type_heatmap", choices = type_choices)
+    
+    region_choices <- c("Select All", 
+                        "Eastern Africa", "Middle Africa", "Western Africa", "Southern Africa",
+                        "Northern Africa", "South Asia", "Southeast Asia", "East Asia", "Central Asia",
+                        "Caucasus and Central Asia", "Oceania", "South America", "Caribbean",
+                        "Central America", "North America", "Europe", "Middle East")
+    updateSelectizeInput(session, "region_select", choices = region_choices)
+    updateSelectizeInput(session, "region_select_heatmap", choices = region_choices)
+  })
+  
+  # Maps and plots renderings based on the filtered data for each tab
   output$map <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 2)) %>%
       addTiles() %>%
       setView(lng = 0, lat = 30, zoom = 2) %>%
-      addMarkers(data = filtered_data(),
+      addMarkers(data = instances_data(),
                  lng = ~longitude, lat = ~latitude,
-                 popup = ~paste0(
-                   "<b>Event Date:</b> ", event_date, "<br>",
-                   "<b>Country:</b> ", country, "<br>",
-                   "<b>Actor Name:</b> ", actor1, "<br>",
-                   ifelse(!is.na(assoc_actor_1), paste0("<b>Secondary Actor:</b> ", assoc_actor_1, "<br>"), ""),
-                   "<b>Actor Type:</b> ", Actor_Type, "<br>",
-                   "<b>Description:</b> ", notes, "<br>",
-                   "<b>Source:</b> ", source
-                 ))
+                 popup = ~paste0("<b>Event Date:</b> ", event_date, "<br>",
+                                 "<b>Country:</b> ", country, "<br>",
+                                 "<b>Actor Name:</b> ", actor1, "<br>",
+                                 "<b>Secondary Actor:</b> ", assoc_actor_1, "<br>",
+                                 "<b>Actor Type:</b> ", Actor_Type, "<br>",
+                                 "<b>Description:</b> ", notes, "<br>",
+                                 "<b>Source:</b> ", source))
   })
   
-  # Render heatmap
   output$heatmap <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 2)) %>%
       addProviderTiles("OpenStreetMap.Mapnik") %>%
-      addHeatmap(data = filtered_data(), lng = ~longitude, lat = ~latitude)
+      addHeatmap(data = heatmap_data(), lng = ~longitude, lat = ~latitude)
   })
   
-  # Render Ukraine map
-  output$ukraine_map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 5)) %>%
-      addTiles(urlTemplate = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution = NULL) %>%
-      setView(lng = 31, lat = 49, zoom = 5) %>%
-      addMarkers(data = filtered_data() %>% filter(country == "Ukraine"),
-                 lng = ~longitude, lat = ~latitude)
+  render_leaflet_map <- function(data, output_id) {
+    output[[output_id]] <- renderLeaflet({
+      validate(
+        need(data, "Waiting for data...")
+      )
+      leaflet(data) %>%
+        addTiles() %>%
+        addMarkers(~longitude, ~latitude, popup = ~paste("<b>Event Date:</b>", event_date))
+    })
+  }
+
+  # Reactive expressions to filter data based on the slider input
+  ukraine_data <- reactive({
+    acled_sexual_violence %>%
+      filter(country == "Ukraine", event_date <= input$date_slider_ukraine)
   })
-  
-  # Render Myanmar map
-  output$myanmar_map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 5)) %>%
-      addTiles(urlTemplate = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution = NULL) %>%
-      setView(lng = 95, lat = 21, zoom = 5) %>%
-      addMarkers(data = filtered_data() %>% filter(country == "Myanmar"),
-                 lng = ~longitude, lat = ~latitude)
+
+  myanmar_data <- reactive({
+    acled_sexual_violence %>%
+      filter(country == "Myanmar", event_date <= input$date_slider_myanmar)
   })
+
+  # Render maps
+  render_leaflet_map(ukraine_data(), "ukraine_map")
+  render_leaflet_map(myanmar_data(), "myanmar_map")
+
   
-  # Reactive expressions for date slider
-  observe({
-    if (!is.null(input$date_select_ukraine)) {
-      updateSliderTextInput(session, "date_slider_ukraine", 
-                            choices = as.character(seq(input$date_select_ukraine[1], input$date_select_ukraine[2], by = "day")))
-    }
-  })
+  current_date <- reactiveVal()
   
-  observe({
-    if (!is.null(input$date_select_myanmar)) {
-      updateSliderTextInput(session, "date_slider_myanmar", 
-                            choices = as.character(seq(input$date_select_myanmar[1], input$date_select_myanmar[2], by = "day")))
-    }
-  })
+  render_leaflet_map <- function(data_func, output_id, lng, lat) {
+    output[[output_id]] <- renderLeaflet({
+      validate(need(data_func(), "Waiting for data..."))
+      data <- data_func()
+      leaflet(data) %>%
+        addTiles() %>%
+        setView(lng = lng, lat = lat, zoom = 5) %>%
+        addMarkers(~longitude, ~latitude, popup = ~paste0("<b>Event Date:</b> ", event_date, "<br>",
+                                                          "<b>Country:</b> ", country, "<br>",
+                                                          "<b>Actor Name:</b> ", actor1, "<br>",
+                                                          "<b>Secondary Actor:</b> ", assoc_actor_1, "<br>",
+                                                          "<b>Actor Type:</b> ", Actor_Type, "<br>",
+                                                          "<b>Description:</b> ", notes, "<br>",
+                                                          "<b>Source:</b> ", source))
+    })
+  }
   
-  # Timer for play button
-  observeEvent(input$play_button_ukraine, {
-    # Placeholder for timer action
-  })
+  # Setup animations for Ukraine and Myanmar using the above function
+  render_leaflet_map(ukraine_data, "ukraine_map", 31, 49)
+  render_leaflet_map(myanmar_data, "myanmar_map", 95, 21)
   
-  observeEvent(input$play_button_myanmar, {
-    # Placeholder for timer action
-  })
   
-  # Render frequency plot
+  # Render frequency plot based on filtered data for the main instances
   output$frequency_plot <- renderPlot({
-    frequency_data <- filtered_data() %>%
+    frequency_data <- instances_data() %>%
       mutate(year = lubridate::year(event_date)) %>%
       group_by(year) %>%
       summarise(frequency = n())
     
-    frequency_data_fatal <- filtered_data() %>%
+    frequency_data_fatal <- instances_data() %>%
       mutate(year = lubridate::year(event_date)) %>%
       group_by(year) %>%
       summarise(fatalities = sum(fatalities))
@@ -348,6 +372,9 @@ server <- function(input, output, session) {
         theme(plot.title = element_text(hjust = 0.5, size = 15, family = "Georgia"))
     }
   })
+
 }
+
+
 
 shinyApp(ui = ui, server = server)
