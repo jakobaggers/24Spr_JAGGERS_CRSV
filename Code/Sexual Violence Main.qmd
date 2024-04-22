@@ -27,7 +27,7 @@ library(ezids)
 
 ## Load Data
 ```{r}
-acled_sexual_violence <- read_csv("../Data/acled_sexual_violence.csv", name_repair = "universal")
+#acled_sexual_violence <- read_csv("../Data/acled_sexual_violence.csv", name_repair = "universal")
 
 SVAC <- read_excel("../Data/SVAC_3.2_conflictyears.xlsx")
 
@@ -304,6 +304,8 @@ ggplot(summary_SVAC, aes(x = year, y = count, color = overall_prev, group = over
        color = "Prevalence Category") +
   theme(plot.title = element_text(hjust = 0.5))
 
+ggsave("../Images/SVAC by overall_prev including not present.png", width  = 6, height = 4, units = "in")
+
 # SVAC filtered
 summary_data_filtered <- filtered_SVAC %>%
   group_by(year, overall_prev) %>%
@@ -317,6 +319,8 @@ ggplot(summary_data_filtered, aes(x = year, y = count, color = overall_prev, gro
        y = "Count",
        color = "Prevalence Category") +
   theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../Images/SVAC by overall_prev (filter prevalent).png", width  = 6, height = 4, units = "in")
 ```
 
 
@@ -587,6 +591,7 @@ ggplot(acled_sexual_violence, aes(x = year)) +
   labs(title = "ACLED Distribution of Observations by Year (Complete)", x = "Year", y = "Count") +
   theme(plot.title = element_text(hjust = 0.5))
 
+
 acled_sexual_violence %>% 
   group_by(Actor_Type) %>% 
   summarize(n = n())
@@ -603,6 +608,8 @@ ggplot(summary_acled, aes(x = year, y = count, color = Actor_Type, group = Actor
        y = "Count",
        color = "Prevalence Category") +
   theme(plot.title = element_text(hjust = 0.5))
+
+(ggsave("../Images/ACLED Frequency by Actor Type.png", width  = 6, height = 4, units = "in"))
 
 acled_sexual_violence %>% 
   group_by(region, Actor_Type) %>% 
@@ -726,23 +733,88 @@ SVAC_complete_prev <- SVAC_complete %>%
 ggplot(SVAC_complete_prev, aes(x = year, color = conflictyear)) +
   geom_line(stat = "count") +
   scale_color_discrete() +
-  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conflict Year") +
   theme_minimal()
+
+ggsave(ggsave("../Images/Frequency by Conflict Year.png", width  = 6, height = 4, units = "in"))
 
 # Create the plot for postc
 ggplot(SVAC_complete_prev, aes(x = year, color = postc)) +
   geom_line(stat = "count") +
   scale_color_discrete() +
-  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Post Conflict") +
   theme_minimal()
+
+ggsave(ggsave("../Images/Frequency by PostConflict.png", width  = 6, height = 4, units = "in"))
 
 # Create the plot for interm
 ggplot(SVAC_complete_prev, aes(x = year, color = interm)) +
   geom_line(stat = "count") +
   scale_color_discrete() +
-  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Conditions") +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Prevalent by Interim") +
   theme_minimal()
 
+ggsave(ggsave("../Images/Frequency by Interim.png", width  = 6, height = 4, units = "in"))
+```
+
+### 100% graphs
+
+```{r}
+# within prev, region x actor type
+filtered_SVAC %>%
+  count(region, actor_type) %>%
+  group_by(region) %>%
+  mutate(percentage = n / sum(n)) %>%
+  ggplot(aes(x = region, y = percentage, fill = actor_type)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(y = "Percentage", x = "Region", fill = "Actor Type") +
+  theme_minimal() +
+  ggtitle("100% Stacked Bar Chart of Actor Type by Region") +
+  scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"))
+
+ggsave(ggsave("../Images/Region bar by actor.png", width  = 6, height = 4, units = "in"))
+
+# within prev, region x overall_prev
+filtered_SVAC %>%
+  count(region, overall_prev) %>%
+  group_by(region) %>%
+  mutate(percentage = n / sum(n)) %>%
+  ggplot(aes(x = region, y = percentage, fill = overall_prev)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(y = "Percentage", x = "Region", fill = "Overall Prevalence") +
+  theme_minimal() +
+  ggtitle("100% Stacked Bar Chart of Overall Prevalence by Region") +
+  scale_fill_manual(values = c("darkgoldenrod1", "darkorange", "red"))
+
+ggsave(ggsave("../Images/Region bar by prevalence.png", width  = 6, height = 4, units = "in"))
+
+# within prev, region x type
+filtered_SVAC %>% 
+  count(region, type_of_conflict) %>%
+  group_by(region) %>%
+  mutate(percentage = n / sum(n)) %>%
+  ggplot(aes(x = region, y = percentage, fill = type_of_conflict)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(y = "Percentage", x = "Region", fill = "Conflict Type") +
+  theme_minimal() +
+  ggtitle("100% Stacked Bar Chart of Conflict Type by Region") +
+  scale_fill_manual(values = c("lightblue", "blue", "navy"))
+
+ggsave(ggsave("../Images/Region bar by conflict type.png", width  = 6, height = 4, units = "in"))
+
+# within prev, region x incompatibility
+filtered_SVAC %>% 
+  count(region, incompatibility) %>%
+  group_by(region) %>%
+  mutate(percentage = n / sum(n)) %>%
+  ggplot(aes(x = region, y = percentage, fill = incompatibility)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(y = "Percentage", x = "Region", fill = "Incompatibility") +
+  theme_minimal() +
+  ggtitle("100% Stacked Bar Chart of iIncompatibility Type by Region") +
+  scale_fill_manual(values = c("aquamarine3", "darkolivegreen3", "darkgreen"))
+
+ggsave(ggsave("../Images/Region bar by incompatibility.png", width  = 6, height = 4, units = "in"))
 ```
 
 

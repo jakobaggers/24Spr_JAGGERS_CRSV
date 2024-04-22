@@ -165,6 +165,75 @@ ui <- fluidPage(
                          value = as.Date("2010-01-01"), step = 7,
                          animate = animationOptions(interval = 50, loop = FALSE)),
              leafletOutput("myanmar_map")
+    ),
+    tabPanel("SVAC Information",
+             fluidRow(
+               column(12,
+                      h1("The Sexual Violence in Armed Conflict Dataset", style="text-align: center; font-family: Georgia, serif; font-size: 30px;") # Big title
+               )
+             ),
+             fluidRow(
+               column(12,
+                      p("The Armed Conflict Location & Event Data Project (ACLED) is very good at providing disaggregated violence data and individual locations at which conflicts have occurred, but it doesn't tell us much else.
+                        To look deeper into trends with more reliable sexual violence data, we now examine the", a(href='http://www.sexualviolencedata.org/dataset/', 'Sexual Violence in Armed Conflict (SVAC) Dataset.', target="_blank"), 
+                        ". This will give us a better perspective on larger trends within the topic of conflict related sexual violence."
+                        )
+                      )
+               ),
+             fluidRow(
+               column(6,
+                      img(src="ACLED Frequency by Actor Type.png", style="width:100%;") 
+               ),
+               column(6, style = "margin-top: 40px;",
+                      p("Part of the reason that trends cannot be derived from the ACLED dataset is that its time periods between countries vary. ACLED began collecting data on some countries as early as 1997, and some countries as late as 2021. As such, the frequencies (see the graph on the left) rise at a level that is more a factor of when the data was collected rather than a rise in number of events. See this ", 
+                        a(href='https://acleddata.com/acleddatanew/wp-content/uploads/dlm_uploads/2019/01/ACLED_Country-and-Time-Period-coverage_updatedFeb2022.pdf', 'link', target="_blank"), " for more information."
+                        )
+               )
+             ),
+             fluidRow(
+               column(6, style = "margin-top: 100px;",
+                      p("The SVAC datset, however, extends from 1989-2021. As we can see in the figure on the right, SVAC has a relatively even distribution throughout its time frame. Thus, trends pulled from this dataset will likely be more accurate than those pulled from the ACLED.
+                        Also, rather than deaggregated data where each point represents one instance of conflict related sexual violence, the SVAC dataset's points each represent one year within a certain conflict.")
+               ),
+               column(6,
+                      img(src="SVAC by overall_prev (filter prevalent).png", style="width:100%;") 
+               )
+             ),
+             fluidRow(
+               column(12, style = "margin-top: 10px;",
+                      tags$p(HTML("The main way that the SVAC dataset is organized is through levels of prevalence of sexual violence. According to the SVAC Codebook, the following are definitions of each level of prevalence of sexual violence:")),
+                      tags$ul(
+                        tags$li(HTML("<b> Prevalence = 0 (None):</b> Report issued, but no mention of rape or other sexual violence related to the conflict.")),
+                        tags$li(HTML("<b> Prevalence = 1 (Isolated):</b> Sexual violence is likely related to the conflict, but did not meet the requirements for a 2 or 3 coding, and: there were “reports,” “isolated reports,” or “there continued to be reports” of occurrences of sexual violence.
+                                     <b> Note: </b> Absent these or similar terms, a count of less than 25 reports of sexual violence indicates a prevalence code of 1.")),
+                        tags$li(HTML("<b> Prevalence = 2 (Numerous):</b> Sexual violence is likely related to the conflict, but did not meet the requirements for a 3 coding, and: Sexual violence was described as “widespread,” “common,” “commonplace,” “extensive,” “frequent,” “often,” “persistent,” “recurring,” a “pattern,” a “common pattern,” or a “spree”. AND Sexual violence occurred “commonly,” “frequently,” “in large numbers,” “periodically,” “regularly,” “routinely,” “widely,” or on a “number of occasions;” there were “many” or “numerous instances”
+                                     <b> Note: </b> Absent these or similar terms, a count of 25-999 reports of sexual violence indicates a prevalence code of 2.")),
+                        tags$li(HTML("<b> Prevalence = 3 (Massive):</b> Sexual violence is likely related to the conflict, and: Sexual violence was described as “systematic” or “massive” or “innumerable” AND Actor used sexual violence as a “means of intimidation,” “instrument of control and punishment,” “weapon,” “tactic to terrorize the population,” “terror tactic,” “tool of war,” on a “massive scale” Note: Absent these or similar terms, a count of 1000 or more reports of sexual violence indicates a prevalence code of 3.
+                                     <b> Note: </b> Absent these or similar terms, a count of 1000 or more reports of sexual violence indicates a prevalence code of 3. "))
+                      ),
+                      tags$p(HTML("We see on below that conflicts coded as 3 are present most often in the Middle East and Africa, when compared proportionally to the conflicts of other prevalence in that specific region.")),
+               )
+             ), 
+             fluidRow(
+               column(12, style = "text-align: center;",
+                    img(src="Region bar by prevalence.png", style="width: 50%; height: auto; display: block; margin: 0 auto;") 
+               )),
+             fluidRow(
+               column(6, style = "margin-top: 100px;",
+                      p("Within conflicts that have a prevalence of at least 1, we can also examine region and type of actor, as seen in the figure on the right.")
+               ),
+               column(6, style = "margin-top: 10px;",
+                      img(src="Region bar by actor.png", style="width:100%;") 
+               )
+             ),
+             fluidRow(
+               column(6, style = "margin-top: 10px;",
+                      img(src="SVAC by overall_prev including not present.png", style="width:100%;") 
+               ),
+               column(6, style = "margin-top: 100px;",
+                      HTML("<b> The Issue With Zeros: </b> Insert information about zeros in SVAC data and all sexual violence data.")
+               )
+             )
     )
   )
 )
