@@ -802,6 +802,29 @@ filtered_SVAC %>%
 
 ggsave(ggsave("../Images/Region bar by conflict type.png", width  = 6, height = 4, units = "in"))
 
+# Within prev, region x type (not added to 100%)
+
+ggplot(SVAC_complete, aes(x = actor_type, fill = overall_prev)) +
+  geom_bar(color = "black") +
+  scale_fill_manual(values = c("Sexual violence not present" = "lightblue",
+                                "Overall Prevalence: Low" = "yellow",
+                                "Overall Prevalence: Medium" = "orange",
+                                "Overall Prevalence: High" = "red")) +
+  theme_minimal() +
+  labs(title = "Distribution of Actor Types by Overall Prevalence (Complete)", 
+       x = "Type of Conflict", y = "Count") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(filtered_SVAC, aes(x = region, fill = type_of_conflict)) +
+  geom_bar(color = "black") +
+  labs(y = "Count", x = "Region", fill = "Conflict Type") +
+  theme_minimal() +
+  ggtitle("Bar Chart of Conflict Type by Region") +
+  scale_fill_manual(values = c("lightblue", "blue", "navy"))
+
+ggsave(ggsave("../Images/Region bar by conflict type (not 100%).png", width  = 6, height = 4, units = "in"))
+
 # within prev, region x incompatibility
 filtered_SVAC %>% 
   count(region, incompatibility) %>%
@@ -815,6 +838,30 @@ filtered_SVAC %>%
   scale_fill_manual(values = c("aquamarine3", "darkolivegreen3", "darkgreen"))
 
 ggsave(ggsave("../Images/Region bar by incompatibility.png", width  = 6, height = 4, units = "in"))
+
+
+# line graph for Africa
+filtered_SVAC %>% 
+  filter(region == "Africa") %>% 
+  ggplot(aes(x = year, color = actor_type)) +
+  geom_line(stat = "count") +
+  scale_color_discrete() +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Instances within Africa by Actor") +
+  theme_minimal()
+
+ggsave("../Images/Actor Type Line Graph Africa.png", width  = 6, height = 4, units = "in")
+
+#conflict type Africa
+filtered_SVAC %>% 
+  filter(region == "Africa") %>% 
+  ggplot(aes(x = year, color = type_of_conflict)) +
+  geom_line(stat = "count") +
+  scale_color_discrete() +
+  labs(x = "Year", y = "Frequency", title = "Frequency of Instances within Africa by Conflict Type") +
+  theme_minimal()
+
+ggsave("../Images/Conflict Type Line Graph Africa.png", width  = 6, height = 4, units = "in")
+
 ```
 
 
