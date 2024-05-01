@@ -298,7 +298,7 @@ summary_SVAC <- SVAC %>%
 ggplot(summary_SVAC, aes(x = year, y = count, color = overall_prev, group = overall_prev)) +
   geom_line() +
   theme_minimal() +
-  labs(title = "Prevalence of Sexual Violence in Conflict by Year (including not present)",
+  labs(title = "Prevalence of Sexual Violence in Conflict by Year",
        x = "Year",
        y = "Count",
        color = "Prevalence Category") +
@@ -764,13 +764,14 @@ ggsave(ggsave("../Images/Frequency by Interim.png", width  = 6, height = 4, unit
 filtered_SVAC %>%
   count(region, actor_type) %>%
   group_by(region) %>%
-  mutate(percentage = n / sum(n)) %>%
+  mutate(percentage = (n / sum(n))) %>%
   ggplot(aes(x = region, y = percentage, fill = actor_type)) +
   geom_bar(stat = "identity", position = "fill") +
   labs(y = "Percentage", x = "Region", fill = "Actor Type") +
   theme_minimal() +
   ggtitle("100% Stacked Bar Chart of Actor Type by Region") +
-  scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"))
+  scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf")) +
+  scale_y_continuous(labels = function(x) paste0(round(x * 100), "%"))
 
 ggsave(ggsave("../Images/Region bar by actor.png", width  = 6, height = 4, units = "in"))
 
@@ -778,15 +779,16 @@ ggsave(ggsave("../Images/Region bar by actor.png", width  = 6, height = 4, units
 filtered_SVAC %>%
   count(region, overall_prev) %>%
   group_by(region) %>%
-  mutate(percentage = n / sum(n)) %>%
+  mutate(percentage = (n / sum(n))*100) %>%
   ggplot(aes(x = region, y = percentage, fill = overall_prev)) +
   geom_bar(stat = "identity", position = "fill") +
   labs(y = "Percentage", x = "Region", fill = "Overall Prevalence") +
+  scale_y_continuous(labels = function(x) paste0(round(x * 100), "%")) +
   theme_minimal() +
   ggtitle("100% Stacked Bar Chart of Overall Prevalence by Region") +
   scale_fill_manual(values = c("darkgoldenrod1", "darkorange", "red"))
 
-ggsave(ggsave("../Images/Region bar by prevalence.png", width  = 6, height = 4, units = "in"))
+ggsave("../Images/Region bar by prevalence.png", width  = 6, height = 4, units = "in")
 
 # within prev, region x type
 filtered_SVAC %>% 
@@ -864,4 +866,31 @@ ggsave("../Images/Conflict Type Line Graph Africa.png", width  = 6, height = 4, 
 
 ```
 
+```{r}
+SVAC %>% 
+group_by(prev_binary) %>% 
+summarize(n = n())
 
+max(acled_sexual_violence$fatalities)
+
+ukraine <- 
+  acled_sexual_violence %>% 
+  filter(country == "Ukraine")
+
+ukraine %>%
+  mutate(date = as.Date(event_date), YearMonth = format(date, "%Y-%m")) %>%
+  group_by(YearMonth) %>%
+  summarise(Frequency = n()) %>%
+  ggplot(aes(x = YearMonth, y = Frequency)) +
+    geom_line(aes(group = 1)) +  # This creates the line
+    geom_point() + # This adds points at each data point
+    geom_vline(xintercept = "2022-02", color = "red") +
+    annotate("text", x = "2022-02", y = 43, label = "Russia invades Ukraine", color = "red", vjust = 0.5, hjust = 1.03) +
+    theme_minimal() + 
+    labs(x = "Time (Year-Month)", y = "Frequency", title = "Monthly Frequency of Sexual Violence in Ukraine") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("../Images/Ukraine.png", width  = 6, height = 4, units = "in")
+
+write.csv(ukraine, "../Data/ukraine.csv", row.names = FALSE)
+```

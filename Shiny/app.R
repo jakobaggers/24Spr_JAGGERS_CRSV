@@ -234,9 +234,17 @@ ui <- fluidPage(
                       HTML("<b> The Issue With Zeros: </b> Insert information about zeros in SVAC data and all sexual violence data.")
                )
              )
+    ),
+    tabPanel("Data Journalism Example",
+             fluidRow(
+               column(12, style = "margin-top: 10px;",
+                      h1("An Example of This Dashboard Being Used for Data Journalism: Ukraine", 
+                         style="text-align: center; font-family: Georgia, serif; font-size: 30px;"), # Big title
+                      tags$iframe(style="height:600px; width:100%", src="CRSV Journalism Example.pdf")
+               ) 
+             )
     )
-  )
-)
+))
 
 server <- function(input, output, session) {
   # Reactive expressions for the main Instances tab
