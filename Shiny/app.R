@@ -231,7 +231,8 @@ ui <- fluidPage(
                       img(src="SVAC by overall_prev including not present.png", style="width:100%;") 
                ),
                column(6, style = "margin-top: 100px;",
-                      HTML("<b> The Issue With Zeros: </b> Insert information about zeros in SVAC data and all sexual violence data.")
+                      HTML("<b> The Issue With Zeros: </b> At the moment, the quality of sexual violence data is poor, mainly due to a large inflation of reported “zeroes” in the data. This made it impossible to accomplish to original goal of this project: creating a model that would predict if a new armed conflict would eventually contain sexual violence based on the presence of risk factors involved. Unfortunately, there is a large inflation of zeroes in the CRSV data, largely due to stigmas around reporting incidents of sexual violence in war. To view (from what I can tell) the only academic resource on the topic, see Changwook Ju’s study: “Determinants of Conflict-Related Sexual Violence: A Meta-Reanalysis Distinguishing Two Classes of Zero Observations.” Further study on the topic is necessary as
+well as using such study to improve the collection of data on sexual violence in armed conflict worldwide.")
                )
              )
     ),
